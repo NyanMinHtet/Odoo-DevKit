@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- Default Sales Scenario -->
+        <record id="default_sales_scenario" model="data_seeder.config">
+            <field name="name">Default Sales Scenario</field>
+            <field name="scenario_type">sales</field>
+            <field name="customer_count">50</field>
+            <field name="product_count">10</field>
+            <field name="order_count">100</field>
+            <field name="avg_lines_per_order">3</field>
+            <field name="percent_confirmed">80</field>
+            <field name="percent_invoiced">70</field>
+            <field name="percent_paid">60</field>
+            <field name="date_start" eval="(datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')"/>
+            <field name="date_end" eval="datetime.now().strftime('%Y-%m-%d')"/>
+            <field name="min_price">10.0</field>
+            <field name="max_price">500.0</field>
+            <field name="min_quantity">1</field>
+            <field name="max_quantity">50</field>
+            <field name="is_template" eval="True"/>
+            <field name="active" eval="True"/>
+        </record>
+
+        <!-- Small Test Scenario -->
+        <record id="small_test_scenario" model="data_seeder.config">
+            <field name="name">Small Test Scenario</field>
+            <field name="scenario_type">sales</field>
+            <field name="customer_count">10</field>
+            <field name="product_count">5</field>
+            <field name="order_count">20</field>
+            <field name="avg_lines_per_order">2</field>
+            <field name="percent_confirmed">90</field>
+            <field name="percent_invoiced">80</field>
+            <field name="percent_paid">70</field>
+            <field name="date_start" eval="(datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')"/>
+            <field name="date_end" eval="datetime.now().strftime('%Y-%m-%d')"/>
+            <field name="min_price">50.0</field>
+            <field name="max_price">200.0</field>
+            <field name="min_quantity">1</field>
+            <field name="max_quantity">10</field>
+            <field name="is_template" eval="True"/>
+            <field name="active" eval="True"/>
+        </record>
+
+        <!-- Large Performance Test Scenario -->
+        <record id="large_performance_scenario" model="data_seeder.config">
+            <field name="name">Large Performance Test</field>
+            <field name="scenario_type">sales</field>
+            <field name="customer_count">500</field>
+            <field name="product_count">50</field>
+            <field name="order_count">2000</field>
+            <field name="avg_lines_per_order">5</field>
+            <field name="percent_confirmed">75</field>
+            <field name="percent_invoiced">60</field>
+            <field name="percent_paid">50</field>
+            <field name="date_start" eval="(datetime.now() - timedelta(days=365)).strftime('%Y-%m-%d')"/>
+            <field name="date_end" eval="datetime.now().strftime('%Y-%m-%d')"/>
+            <field name="min_price">5.0</field>
+            <field name="max_price">1000.0</field>
+            <field name="min_quantity">1</field>
+            <field name="max_quantity">100</field>
+            <field name="is_template" eval="True"/>
+            <field name="active" eval="True"/>
+        </record>
+
+    </data>
+</odoo>

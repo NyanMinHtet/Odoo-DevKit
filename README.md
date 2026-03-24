@@ -19,6 +19,7 @@ Future versions will follow the same pattern. Please ensure you are using the br
 | Module | Description |
 | :--- | :--- |
 | **[web_swagger](./web_swagger/)** | Integrates Swagger UI for beautiful, interactive API documentation. |
+| **[odoo_data_seeder](./odoo_data_seeder/)** | Generate realistic, linked business data and simulate workflows inside a test database with one click. |
 
 ## Contributing
 Contributions are welcome! If you have an idea for a new module or an improvement, please open an issue or submit a pull request.
