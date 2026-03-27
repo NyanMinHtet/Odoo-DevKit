@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from odoo import models, fields, api, _
-from odoo.exceptions import UserError
-from datetime import datetime
-
+from odoo import api, fields, models, _
 
 class DataSeederRun(models.Model):
     _name = 'data_seeder.run'
@@ -43,8 +40,12 @@ class DataSeederRun(models.Model):
     generated_product_ids = fields.Many2many('product.product', string='Generated Products')
     generated_order_ids = fields.Many2many('sale.order', string='Generated Orders')
     generated_invoice_ids = fields.Many2many('account.move', string='Generated Invoices')
+    generated_payment_ids = fields.Many2many('account.payment', string='Generated Payments')
+    generated_picking_ids = fields.Many2many('stock.picking', string='Generated Pickings')
+    generated_move_ids = fields.Many2many('stock.move', string='Generated Stock Moves')
+    generated_move_line_ids = fields.Many2many('stock.move.line', string='Generated Stock Move Lines')
 
-    company_id = fields.Many2many('res.company', string='Company')
+    company_id = fields.Many2one('res.company', string='Company')
 
     def action_view_generated_records(self):
         """Open tree view of all generated records"""
@@ -62,6 +63,16 @@ class DataSeederRun(models.Model):
     def action_cancel(self):
         self.write({'state': 'error', 'error_message': 'Cancelled by user'})
 
+    @api.depends(
+        'customer_count',
+        'product_count',
+        'order_count',
+        'invoice_count',
+        'payment_count',
+        'generated_picking_ids',
+        'generated_move_ids',
+        'generated_move_line_ids',
+    )
     def _compute_total_records(self):
         for rec in self:
             rec.total_records = (
@@ -69,7 +80,10 @@ class DataSeederRun(models.Model):
                 rec.product_count +
                 rec.order_count +
                 rec.invoice_count +
-                rec.payment_count
+                rec.payment_count +
+                len(rec.generated_picking_ids) +
+                len(rec.generated_move_ids) +
+                len(rec.generated_move_line_ids)
             )
 
     total_records = fields.Integer(string='Total Records', compute='_compute_total_records')

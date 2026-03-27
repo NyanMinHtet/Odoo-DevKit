@@ -30,6 +30,7 @@
                             <field name="percent_confirmed" readonly="state in ['running', 'done', 'error']"/>
                             <field name="percent_invoiced" readonly="state in ['running', 'done', 'error']"/>
                             <field name="percent_paid" readonly="state in ['running', 'done', 'error']"/>
+                            <field name="percent_delivered" readonly="state in ['running', 'done', 'error']"/>
                         </group>
                     </group>
 
@@ -47,6 +48,22 @@
                         <group string="Quantity Range">
                             <field name="min_quantity" readonly="state in ['running', 'done', 'error']"/>
                             <field name="max_quantity" readonly="state in ['running', 'done', 'error']"/>
+                        </group>
+                    </group>
+
+                    <group string="Inventory Configuration">
+                        <group string="Flow Settings">
+                            <field name="enable_inventory_flow" readonly="state in ['running', 'done', 'error']"/>
+                            <field name="storable_product_ratio" readonly="state in ['running', 'done', 'error']"/>
+                            <field name="initial_stock_per_product" readonly="state in ['running', 'done', 'error']"/>
+                        </group>
+                        <group string="Warehouse Settings">
+                            <field name="warehouse_id"
+                                   readonly="state in ['running', 'done', 'error']"
+                                   invisible="not enable_inventory_flow"/>
+                            <field name="stock_location_id"
+                                   readonly="state in ['running', 'done', 'error']"
+                                   invisible="not enable_inventory_flow"/>
                         </group>
                     </group>
 

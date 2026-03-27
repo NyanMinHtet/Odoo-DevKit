@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from odoo import models, api, _
+from odoo import _, models
+from odoo.exceptions import ValidationError
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -9,6 +10,15 @@ _logger = logging.getLogger(__name__)
 class DataSeederRunManager(models.AbstractModel):
     _name = 'data_seeder.run.manager'
     _description = 'Data Seeder Run Manager Service'
+
+    def _check_test_database(self):
+        """Cleanup is only allowed for test databases."""
+        db_name = self.env.cr.dbname
+        test_keywords = ['test', 'sandbox', 'dev', 'stage', 'demo', 'tmp']
+        if not any(keyword in db_name.lower() for keyword in test_keywords):
+            raise ValidationError(_(
+                "Run cleanup is only allowed in test/sandbox databases.\n\nCurrent database: %s"
+            ) % db_name)
 
     def create_run(self, config, result):
         """Create a new run record after generation"""
@@ -48,15 +58,73 @@ class DataSeederRunManager(models.AbstractModel):
             return False
 
         if delete_generated_records:
-            # Delete generated records
-            self.env['account.payment'].browse(run.generated_payment_ids).unlink()
-            self.env['account.move'].browse(run.generated_invoice_ids).unlink()
-            self.env['sale.order'].browse(run.generated_order_ids).unlink()
-            self.env['product.product'].browse(run.generated_product_ids).unlink()
-            self.env['res.partner'].browse(run.generated_customer_ids).unlink()
+            self._check_test_database()
+
+            done_pickings = run.generated_picking_ids.filtered(lambda picking: picking.state == 'done')
+            if done_pickings:
+                raise ValidationError(_(
+                    "Cleanup for runs with validated deliveries is blocked.\n\n"
+                    "Create stock returns for delivered pickings before deleting generated records."
+                ))
+
+            payments = run.generated_payment_ids
+            invoices = run.generated_invoice_ids
+            pickings = run.generated_picking_ids
+            orders = run.generated_order_ids
+            products = run.generated_product_ids
+            customers = run.generated_customer_ids
+
+            if payments:
+                payments.filtered(lambda payment: payment.state != 'cancel').action_cancel()
+                payments.unlink()
+
+            if invoices:
+                posted_invoices = invoices.filtered(lambda move: move.state == 'posted')
+                if posted_invoices:
+                    posted_invoices.button_draft()
+                cancellable_invoices = invoices.filtered(lambda move: move.state != 'cancel')
+                if cancellable_invoices:
+                    cancellable_invoices.button_cancel()
+                invoices.unlink()
+
+            if pickings:
+                pickings.filtered(lambda picking: picking.state != 'cancel').action_cancel()
+                pickings.unlink()
+
+            if orders:
+                orders.filtered(lambda order: order.state != 'cancel').action_cancel()
+                orders.unlink()
+
+            if products:
+                self._clear_generated_inventory(products)
+                products.unlink()
+
+            if customers:
+                customers.unlink()
 
         run.unlink()
         return True
+
+    def _clear_generated_inventory(self, products):
+        """Remove internal stock left behind for generated tracked goods."""
+        storable_products = products.filtered('is_storable')
+        if not storable_products:
+            return
+
+        quants = self.env['stock.quant'].search([
+            ('product_id', 'in', storable_products.ids),
+            ('location_id.usage', '=', 'internal'),
+            ('quantity', '!=', 0),
+        ])
+        for quant in quants:
+            self.env['stock.quant']._update_available_quantity(
+                quant.product_id,
+                quant.location_id,
+                -quant.quantity,
+                lot_id=quant.lot_id,
+                package_id=quant.package_id,
+                owner_id=quant.owner_id,
+            )
 
     def get_all_runs(self, limit=100):
         """Get all runs"""

@@ -22,6 +22,7 @@ class DataSeederWizard(models.TransientModel):
     percent_confirmed = fields.Integer(string='% Confirmed Orders', default=80, required=True)
     percent_invoiced = fields.Integer(string='% Invoiced', default=70, required=True)
     percent_paid = fields.Integer(string='% Paid', default=60, required=True)
+    percent_delivered = fields.Integer(string='% Delivered', default=80, required=True)
 
     # Date range
     date_start = fields.Date(string='Start Date', required=True, default=fields.Date.context_today)
@@ -32,6 +33,23 @@ class DataSeederWizard(models.TransientModel):
     max_price = fields.Float(string='Maximum Price', default=500.0)
     min_quantity = fields.Integer(string='Minimum Quantity', default=1)
     max_quantity = fields.Integer(string='Maximum Quantity', default=50)
+    initial_stock_per_product = fields.Integer(string='Initial Stock Per Product', default=25)
+
+    # Inventory
+    enable_inventory_flow = fields.Boolean(string='Enable Inventory Flow', default=False)
+    warehouse_id = fields.Many2one(
+        'stock.warehouse',
+        string='Warehouse',
+        default=lambda self: self.env['stock.warehouse'].search([
+            '|', ('company_id', '=', False), ('company_id', '=', self.env.company.id),
+        ], limit=1),
+    )
+    stock_location_id = fields.Many2one(
+        'stock.location',
+        string='Stock Location',
+        domain="[('usage', '=', 'internal'), '|', ('company_id', '=', False), ('company_id', '=', company_id)]",
+    )
+    storable_product_ratio = fields.Integer(string='Storable Product Ratio', default=70)
 
     # Company
     company_id = fields.Many2one('res.company', string='Company',
@@ -75,11 +93,40 @@ class DataSeederWizard(models.TransientModel):
         if self.order_count > max_orders:
             raise ValidationError(_("Order count cannot exceed %d") % max_orders)
 
+    def _check_date_range(self):
+        """Validate date range configuration."""
+        if self.date_end < self.date_start:
+            raise ValidationError(_("End date cannot be earlier than start date."))
+
+    def _check_percentages(self):
+        """Validate percentage-based workflow settings."""
+        percentage_fields = [
+            ('percent_confirmed', _('Confirmed percentage')),
+            ('percent_invoiced', _('Invoiced percentage')),
+            ('percent_paid', _('Paid percentage')),
+            ('percent_delivered', _('Delivered percentage')),
+            ('storable_product_ratio', _('Storable product ratio')),
+        ]
+        for field_name, field_label in percentage_fields:
+            value = self[field_name]
+            if value < 0 or value > 100:
+                raise ValidationError(_("%s must be between 0 and 100.") % field_label)
+
+    def _check_inventory_settings(self):
+        """Validate inventory-related configuration."""
+        if self.initial_stock_per_product < 0:
+            raise ValidationError(_("Initial stock per product cannot be negative."))
+        if self.enable_inventory_flow and not self.warehouse_id:
+            raise ValidationError(_("A warehouse is required when inventory flow is enabled."))
+
     def action_start_generation(self):
         """Validate and start data generation"""
         try:
             self._check_test_database()
             self._check_max_limits()
+            self._check_date_range()
+            self._check_percentages()
+            self._check_inventory_settings()
         except ValidationError as e:
             raise e
 
@@ -92,11 +139,11 @@ class DataSeederWizard(models.TransientModel):
             'state': 'running',
             'start_date': fields.Datetime.now(),
             'config_json': str(self.read()[0]),
+            'company_id': self.company_id.id,
         })
 
         try:
-            # Run generation service
-            result = self.env['data_seeder.data.generator'].generate({
+            params = {
                 'customer_count': self.customer_count,
                 'product_count': self.product_count,
                 'order_count': self.order_count,
@@ -104,15 +151,24 @@ class DataSeederWizard(models.TransientModel):
                 'percent_confirmed': self.percent_confirmed,
                 'percent_invoiced': self.percent_invoiced,
                 'percent_paid': self.percent_paid,
+                'percent_delivered': self.percent_delivered,
                 'date_start': self.date_start,
                 'date_end': self.date_end,
                 'min_price': self.min_price,
                 'max_price': self.max_price,
                 'min_quantity': self.min_quantity,
                 'max_quantity': self.max_quantity,
+                'initial_stock_per_product': self.initial_stock_per_product,
                 'company_id': self.company_id.id,
+                'enable_inventory_flow': self.enable_inventory_flow,
+                'warehouse_id': self.warehouse_id.id,
+                'stock_location_id': self.stock_location_id.id,
+                'storable_product_ratio': self.storable_product_ratio,
                 'run_id': run.id,
-            })
+            }
+
+            # Run generation service
+            result = self.env['data_seeder.data.generator'].generate(params)
 
             # Update run record
             run.write({

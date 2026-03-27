@@ -22,7 +22,35 @@ Future versions will follow the same pattern. Please ensure you are using the br
 | **[odoo_data_seeder](./odoo_data_seeder/)** | Generate realistic, linked business data and simulate workflows inside a test database with one click. |
 
 ## Contributing
-Contributions are welcome! If you have an idea for a new module or an improvement, please open an issue or submit a pull request.
+Contributions are welcome, but changes must go through pull requests.
+
+- Do not push directly to `main`.
+- Do not force-push to `main`.
+- Create a feature or fix branch from the correct Odoo version branch, usually `18.0`.
+- Open a pull request with a clear summary, scope, testing notes, and affected modules.
+- Keep pull requests focused. Avoid mixing unrelated fixes and features in one PR.
+
+Recommended branch names:
+
+- `feature/<short-description>`
+- `fix/<short-description>`
+- `docs/<short-description>`
+- `refactor/<short-description>`
+
+Examples:
+
+- `feature/inventory-delivery-seeder`
+- `fix/swagger-menu-loading`
+- `docs/contribution-guide`
+
+Before opening a pull request:
+
+- follow Odoo version and module conventions used in this repo
+- update module documentation when behavior changes
+- update `test.md` when adding or changing features
+- include steps to verify the change in a sandbox or test database
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for the full contribution workflow and PR format.
 
 ## License
 This project is licensed under the LGPL-3 License. See the [LICENSE](LICENSE) file for details.

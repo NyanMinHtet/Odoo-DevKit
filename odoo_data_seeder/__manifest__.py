@@ -20,13 +20,16 @@ Core Features:
 - Run management with execution logs
 - Safety checks for test database
 """,
-    'author': 'shoto', 'website': 'https://github.com/nyanminhtet/odoo-devkit',
+    'author': 'Shoto', 
+    'website': 'https://nyanminhtet-portfolio.netlify.app',
     'license': 'LGPL-3',
     'depends': [
         'base',
         'sale',
         'sale_management',
+        'sale_stock',
         'account',
+        'stock',
     ],
     'data': [
         'security/ir.model.access.csv',

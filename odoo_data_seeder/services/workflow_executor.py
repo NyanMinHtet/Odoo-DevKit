@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from odoo import models, api
+from odoo import models
 from datetime import datetime
 import random
 import logging
@@ -12,25 +12,41 @@ class DataSeederWorkflowExecutor(models.AbstractModel):
     _name = 'data_seeder.workflow.executor'
     _description = 'Data Seeder Workflow Executor Service'
 
-    def _execute_workflow(self, order_ids, percent_confirmed=80, percent_invoiced=70, percent_paid=60):
-        """Execute sales workflow: confirm orders, create invoices, register payments"""
+    def _execute_workflow(self, order_ids, percent_confirmed=80, percent_invoiced=70,
+                          percent_paid=60, percent_delivered=0):
+        """Execute sales workflow: confirm orders, process deliveries, invoice, and pay."""
         result = {
             'confirmed_count': 0,
+            'delivered_count': 0,
             'invoice_count': 0,
             'payment_count': 0,
+            'picking_ids': [],
+            'move_ids': [],
+            'move_line_ids': [],
+            'invoice_ids': [],
+            'payment_ids': [],
         }
 
         # Step 1: Confirm orders
         confirmed_orders = self._confirm_orders(order_ids, percent_confirmed)
         result['confirmed_count'] = len(confirmed_orders)
 
-        # Step 2: Create invoices
+        # Step 2: Process deliveries
+        delivery_result = self._process_deliveries(confirmed_orders, percent_delivered)
+        result['delivered_count'] = delivery_result.get('delivered_count', 0)
+        result['picking_ids'] = delivery_result.get('picking_ids', [])
+        result['move_ids'] = delivery_result.get('move_ids', [])
+        result['move_line_ids'] = delivery_result.get('move_line_ids', [])
+
+        # Step 3: Create invoices
         invoiced_orders = self._create_invoices(confirmed_orders, percent_invoiced)
+        result['invoice_ids'] = invoiced_orders
         result['invoice_count'] = len(invoiced_orders)
 
-        # Step 3: Register payments
-        paid_invoices = self._register_payments(invoiced_orders, percent_paid)
-        result['payment_count'] = len(paid_invoices)
+        # Step 4: Register payments
+        payments = self._register_payments(invoiced_orders, percent_paid)
+        result['payment_ids'] = payments
+        result['payment_count'] = len(payments)
 
         return result
 
@@ -50,6 +66,81 @@ class DataSeederWorkflowExecutor(models.AbstractModel):
             _logger.info(f"Confirmed {len(confirmed)} sale orders")
 
         return confirmed.ids
+
+    def _process_deliveries(self, confirmed_order_ids, percent_delivered):
+        """Reserve and validate a percentage of deliveries created from confirmed orders."""
+        result = {
+            'delivered_count': 0,
+            'picking_ids': [],
+            'move_ids': [],
+            'move_line_ids': [],
+        }
+        if not confirmed_order_ids:
+            return result
+
+        pickings = self._collect_pickings_from_orders(confirmed_order_ids)
+        if not pickings:
+            return result
+
+        self._assign_pickings(pickings)
+        eligible_pickings = pickings.filtered(
+            lambda picking: picking.state in ('confirmed', 'assigned', 'partially_available')
+        )
+        num_to_deliver = int(len(eligible_pickings) * percent_delivered / 100)
+        pickings_to_deliver = self.env['stock.picking'].browse(
+            random.sample(eligible_pickings.ids, min(num_to_deliver, len(eligible_pickings)))
+        )
+        delivered_pickings = self._validate_pickings(pickings_to_deliver)
+
+        result['delivered_count'] = len(delivered_pickings)
+        result['picking_ids'] = pickings.ids
+        result['move_ids'] = pickings.move_ids.ids
+        result['move_line_ids'] = pickings.move_line_ids.ids
+        return result
+
+    def _collect_pickings_from_orders(self, confirmed_order_ids):
+        """Collect stock pickings generated from confirmed sale orders."""
+        orders = self.env['sale.order'].browse(confirmed_order_ids).exists()
+        pickings = orders.mapped('picking_ids').filtered(lambda picking: picking.state != 'cancel')
+        if pickings:
+            _logger.info("Collected %s delivery pickings from confirmed orders", len(pickings))
+        return pickings
+
+    def _assign_pickings(self, pickings):
+        """Reserve stock for eligible pickings."""
+        pickings_to_assign = pickings.filtered(
+            lambda picking: picking.state in ('confirmed', 'waiting', 'partially_available')
+        )
+        for picking in pickings_to_assign:
+            try:
+                picking.action_assign()
+            except Exception:
+                _logger.exception("Failed to reserve stock for picking %s", picking.name)
+        return pickings
+
+    def _validate_pickings(self, pickings):
+        """Validate pickings by filling done quantities through the standard stock flow."""
+        delivered_pickings = self.env['stock.picking']
+        for picking in pickings:
+            if picking.state not in ('assigned', 'partially_available', 'confirmed'):
+                continue
+            if picking.state in ('confirmed', 'partially_available'):
+                self._assign_pickings(picking)
+
+            moves_to_process = picking.move_ids.filtered(lambda move: move.state not in ('done', 'cancel'))
+            if not moves_to_process:
+                continue
+
+            for move in moves_to_process:
+                move.quantity = move.product_uom_qty
+            moves_to_process.picked = True
+            picking.with_context(skip_backorder=True).button_validate()
+            if picking.state == 'done':
+                delivered_pickings |= picking
+
+        if delivered_pickings:
+            _logger.info("Validated %s delivery pickings", len(delivered_pickings))
+        return delivered_pickings
 
     def _create_invoices(self, confirmed_order_ids, percent_invoiced):
         """Create invoices for confirmed orders"""
@@ -90,11 +181,10 @@ class DataSeederWorkflowExecutor(models.AbstractModel):
         num_to_pay = int(len(posted_invoices) * percent_paid / 100)
         invoices_to_pay = random.sample(posted_invoices.ids, min(num_to_pay, len(posted_invoices)))
 
-        paid_count = 0
+        payment_ids = []
         for invoice_id in invoices_to_pay:
             invoice = self.env['account.move'].browse(invoice_id)
             if invoice.payment_state == 'not_paid':
-                # Register payment
                 payment_register = self.env['account.payment.register'].with_context({
                     'active_model': 'account.move',
                     'active_ids': [invoice_id],
@@ -102,9 +192,9 @@ class DataSeederWorkflowExecutor(models.AbstractModel):
                     'payment_date': datetime.now().date(),
                     'amount': invoice.amount_residual,
                 })
-                payment_register.action_create_payments()
-                paid_count += 1
+                payments = payment_register._create_payments()
+                payment_ids.extend(payments.ids)
 
-        _logger.info(f"Registered {paid_count} payments")
+        _logger.info(f"Registered {len(payment_ids)} payments")
 
-        return list(range(paid_count))  # Return count as list for consistency
+        return payment_ids

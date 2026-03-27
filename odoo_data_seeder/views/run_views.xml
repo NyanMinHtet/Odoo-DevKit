@@ -63,8 +63,62 @@
                     <group string="Generated Records">
                         <field name="generated_customer_ids" readonly="True"/>
                         <field name="generated_product_ids" readonly="True"/>
-                        <field name="generated_order_ids" readonly="True"/>
-                        <field name="generated_invoice_ids" readonly="True"/>
+                        <field name="generated_order_ids" readonly="True">
+                            <list string="Generated Orders">
+                                <field name="name"/>
+                                <field name="partner_id"/>
+                                <field name="date_order"/>
+                                <field name="state"/>
+                                <field name="invoice_status"/>
+                                <field name="amount_total"/>
+                            </list>
+                        </field>
+                        <field name="generated_invoice_ids" readonly="True">
+                            <list string="Generated Invoices">
+                                <field name="name"/>
+                                <field name="move_type"/>
+                                <field name="state"/>
+                                <field name="invoice_date"/>
+                                <field name="partner_id"/>
+                                <field name="amount_total"/>
+                            </list>
+                        </field>
+                        <field name="generated_payment_ids" readonly="True">
+                            <list string="Generated Payments">
+                                <field name="name"/>
+                                <field name="partner_id"/>
+                                <field name="date"/>
+                                <field name="state"/>
+                                <field name="amount"/>
+                            </list>
+                        </field>
+                        <field name="generated_picking_ids" readonly="True">
+                            <list string="Generated Pickings">
+                                <field name="name"/>
+                                <field name="partner_id"/>
+                                <field name="scheduled_date"/>
+                                <field name="state"/>
+                                <field name="picking_type_id"/>
+                            </list>
+                        </field>
+                        <field name="generated_move_ids" readonly="True">
+                            <list string="Generated Stock Moves">
+                                <field name="name"/>
+                                <field name="product_id"/>
+                                <field name="product_uom_qty"/>
+                                <field name="quantity"/>
+                                <field name="state"/>
+                            </list>
+                        </field>
+                        <field name="generated_move_line_ids" readonly="True">
+                            <list string="Generated Stock Move Lines">
+                                <field name="move_id"/>
+                                <field name="product_id"/>
+                                <field name="location_id"/>
+                                <field name="location_dest_id"/>
+                                <field name="quantity"/>
+                            </list>
+                        </field>
                     </group>
 
                     <group string="Logs">

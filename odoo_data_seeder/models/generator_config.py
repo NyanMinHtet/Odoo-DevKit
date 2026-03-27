@@ -27,6 +27,7 @@ class DataSeederConfig(models.Model):
     percent_confirmed = fields.Integer(string='% Confirmed Orders', default=80, help="Percentage of orders to confirm")
     percent_invoiced = fields.Integer(string='% Invoiced', default=70, help="Percentage of confirmed orders to invoice")
     percent_paid = fields.Integer(string='% Paid', default=60, help="Percentage of invoices to pay")
+    percent_delivered = fields.Integer(string='% Delivered', default=80, help="Percentage of eligible deliveries to validate")
 
     # Date range
     date_start = fields.Date(string='Start Date', required=True)
@@ -41,6 +42,7 @@ class DataSeederConfig(models.Model):
     max_price = fields.Float(string='Maximum Price', default=500.0)
     min_quantity = fields.Integer(string='Minimum Quantity', default=1)
     max_quantity = fields.Integer(string='Maximum Quantity', default=50)
+    initial_stock_per_product = fields.Integer(string='Initial Stock Per Product', default=25)
 
     # Customer settings
     customer_type = fields.Selection([
@@ -56,13 +58,18 @@ class DataSeederConfig(models.Model):
         ('service', 'Service'),
     ], string='Product Type', default='product')
 
+    enable_inventory_flow = fields.Boolean(string='Enable Inventory Flow', default=False)
+    warehouse_id = fields.Many2one('stock.warehouse', string='Warehouse')
+    stock_location_id = fields.Many2one('stock.location', string='Stock Location')
+    storable_product_ratio = fields.Integer(string='Storable Product Ratio', default=70)
+
     active = fields.Boolean(string='Active', default=True)
     is_template = fields.Boolean(string='Is Template', default=False)
 
     _sql_constraints = [
         ('date_check', 'CHECK (date_end >= date_start)',
          'End date must be greater than or equal to start date'),
-        ('percent_check', 'CHECK (percent_confirmed <= 100 AND percent_invoiced <= 100 AND percent_paid <= 100)',
+        ('percent_check', 'CHECK (percent_confirmed <= 100 AND percent_invoiced <= 100 AND percent_paid <= 100 AND percent_delivered <= 100)',
          'Percentages must not exceed 100'),
     ]
 
