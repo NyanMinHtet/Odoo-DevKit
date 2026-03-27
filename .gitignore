@@ -3,6 +3,7 @@ __pycache__/
 *.py[codz]
 *$py.class
 *plan.md
+odoo_data_seeder/plan.md
 # C extensions
 *.so
 
