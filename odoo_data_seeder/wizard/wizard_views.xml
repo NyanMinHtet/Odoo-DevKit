@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Wizard Form View -->
+    <record id="view_data_seeder_wizard_form" model="ir.ui.view">
+        <field name="name">data_seeder.wizard.form</field>
+        <field name="model">data_seeder.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Generate Test Data">
+                <sheet>
+                    <div class="alert alert-info" role="alert" invisible="state != 'draft'">
+                        <strong>Warning:</strong> This will create test data in your database.
+                        Only use in test/sandbox environments.
+                    </div>
+                    <div class="alert alert-success" role="alert" invisible="state != 'done'">
+                        Generation completed successfully!
+                    </div>
+                    <div class="alert alert-danger" role="alert" invisible="state != 'error'">
+                        Generation failed. Check the log for details.
+                    </div>
+
+                    <group string="Data Configuration">
+                        <group string="Record Counts">
+                            <field name="customer_count" readonly="state in ['running', 'done', 'error']"/>
+                            <field name="product_count" readonly="state in ['running', 'done', 'error']"/>
+                            <field name="order_count" readonly="state in ['running', 'done', 'error']"/>
+                            <field name="avg_lines_per_order" readonly="state in ['running', 'done', 'error']"/>
+                        </group>
+                        <group string="Workflow Settings">
+                            <field name="percent_confirmed" readonly="state in ['running', 'done', 'error']"/>
+                            <field name="percent_invoiced" readonly="state in ['running', 'done', 'error']"/>
+                            <field name="percent_paid" readonly="state in ['running', 'done', 'error']"/>
+                            <field name="percent_delivered" readonly="state in ['running', 'done', 'error']"/>
+                        </group>
+                    </group>
+
+                    <group string="Date Range">
+                        <field name="date_start" readonly="state in ['running', 'done', 'error']"/>
+                        <field name="date_end" readonly="state in ['running', 'done', 'error']"/>
+                        <field name="company_id" groups="base.group_multi_company" readonly="state in ['running', 'done', 'error']"/>
+                    </group>
+
+                    <group string="Price Settings">
+                        <group string="Price Range">
+                            <field name="min_price" readonly="state in ['running', 'done', 'error']"/>
+                            <field name="max_price" readonly="state in ['running', 'done', 'error']"/>
+                        </group>
+                        <group string="Quantity Range">
+                            <field name="min_quantity" readonly="state in ['running', 'done', 'error']"/>
+                            <field name="max_quantity" readonly="state in ['running', 'done', 'error']"/>
+                        </group>
+                    </group>
+
+                    <group string="Inventory Configuration">
+                        <group string="Flow Settings">
+                            <field name="enable_inventory_flow" readonly="state in ['running', 'done', 'error']"/>
+                            <field name="storable_product_ratio" readonly="state in ['running', 'done', 'error']"/>
+                            <field name="initial_stock_per_product" readonly="state in ['running', 'done', 'error']"/>
+                        </group>
+                        <group string="Warehouse Settings">
+                            <field name="warehouse_id"
+                                   readonly="state in ['running', 'done', 'error']"
+                                   invisible="not enable_inventory_flow"/>
+                            <field name="stock_location_id"
+                                   readonly="state in ['running', 'done', 'error']"
+                                   invisible="not enable_inventory_flow"/>
+                        </group>
+                    </group>
+
+                    <group string="Execution Log" invisible="state == 'draft'">
+                        <field name="log" nolabel="True" colspan="2" readonly="True"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="Generate" type="object" name="action_start_generation"
+                            class="btn-primary" icon="fa-play"
+                            invisible="state in ['running', 'done', 'error']"/>
+                    <button string="Cancel" type="object" name="action_cancel"
+                            class="btn-secondary" icon="fa-times"
+                            invisible="state in ['done', 'error']"/>
+                    <button string="Close" type="object" name="action_cancel"
+                            class="btn-secondary" icon="fa-close"
+                            invisible="state == 'draft'"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Wizard Action -->
+    <record id="action_data_seeder_wizard" model="ir.actions.act_window">
+        <field name="name">Generate Test Data</field>
+        <field name="res_model">data_seeder.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>
