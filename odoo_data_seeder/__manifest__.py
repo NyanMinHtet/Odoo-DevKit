@@ -1,26 +1,22 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Odoo Data Seeder',
-    'version': '18.0.1.0.0',
+    'version': '18.0.2.0.0',
     'category': 'Developer Tools',
-    'summary': 'Generate realistic, linked business data and simulate workflows inside a test database',
+    'summary': 'Generate linked test data and simulate sales-to-delivery workflows safely',
     'description': """
 Odoo Data Seeder
 ================
-Enable Odoo developers to:
-* Generate realistic data instantly
-* Simulate real business workflows
-* Test reports, dashboards, and performance
-* Avoid manual data entry and CSV imports
+Generate realistic business records in safe test databases and simulate linked workflows.
 
-Core Features:
-- Select scenario → Configure → Generate → Get full working dataset
-- Sales scenario support (customers, products, orders, invoices, payments)
-- Workflow simulation (confirm orders, create invoices, register payments)
-- Run management with execution logs
-- Safety checks for test database
+Main features:
+- Sales dataset generation for customers, products, and sale orders
+- Workflow execution for confirmations, invoices, payments, and deliveries
+- Inventory-aware product generation with optional stock seeding
+- Generation history with linked records and execution logs
+- Test database safety checks and cleanup support
 """,
-    'author': 'Shoto', 
+    'author': 'Shoto',
     'website': 'https://nyanminhtet-portfolio.netlify.app',
     'license': 'LGPL-3',
     'depends': [
@@ -38,7 +34,10 @@ Core Features:
         'data/default_scenarios.xml',
         'views/menu.xml',
     ],
+    'images': [
+        'static/description/img.png',
+    ],
     'installable': True,
-    'application': False,
+    'application': True,
     'auto_install': False,
 }
