@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Swagger UI',
-    'version': '18.0.1.0.0',
+    'version': '19.0.1.0.0',
     'category': 'Tools',
     'author': 'Shoto',
     'website': 'https://nyanminhtet-portfolio.netlify.app',

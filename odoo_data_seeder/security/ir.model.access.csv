@@ -1,7 +1,0 @@
-id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_data_seeder_run_user,data_seeder.run.user,model_data_seeder_run,base.group_user,1,1,1,1
-access_data_seeder_config_user,data_seeder.config.user,model_data_seeder_config,base.group_user,1,1,1,1
-access_data_seeder_wizard_user,data_seeder.wizard.user,model_data_seeder_wizard,base.group_user,1,1,1,1
-access_data_seeder_data_generator_user,data_seeder.data.generator.user,model_data_seeder_data_generator,base.group_user,1,1,1,1
-access_data_seeder_workflow_executor_user,data_seeder.workflow.executor.user,model_data_seeder_workflow_executor,base.group_user,1,1,1,1
-access_data_seeder_run_manager_user,data_seeder.run.manager.user,model_data_seeder_run_manager,base.group_user,1,1,1,1

@@ -5,7 +5,7 @@ This document provides guidelines for AI agents working with the Odoo-DevKit rep
 ## Module Development Guidelines
 
 ### Code Style
-- Follow Odoo 18.0 conventions
+- Follow Odoo 19.0 conventions
 - Use Python 3.10+ features appropriately
 - All Python files must have `# -*- coding: utf-8 -*-` header
 - Use Odoo's `_` for translations: `from odoo import _, models, fields, api`
@@ -57,9 +57,9 @@ depends = ['base', 'web']
 
 ## Version Compatibility
 
-- Target Odoo 18.0 (branch: `18.0`)
+- Target Odoo 19.0 (branch: `19.0`)
 - Future versions: maintain separate branches (`17.0`, `18.0`, etc.)
-- Manifest version format: `18.0.X.Y.Z`
+- Manifest version format: `19.0.X.Y.Z`
 
 ## Common Patterns
 

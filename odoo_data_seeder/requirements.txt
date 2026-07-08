@@ -1,6 +1,0 @@
-# Odoo Sandbox Generator - Python Requirements
-# Install with: pip install -r requirements.txt
-
-# Faker - generates realistic fake data for customers, products, etc.
-# Optional but recommended for better test data quality
-faker>=30.0.0

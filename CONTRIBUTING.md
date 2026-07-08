@@ -15,6 +15,7 @@ Use the Odoo version branch that matches your target work:
 
 - `17.0`
 - `18.0`
+- `19.0`
 
 If you are contributing to Odoo 18 modules, branch from `18.0`, not `main`, unless maintainers explicitly ask otherwise.
 
