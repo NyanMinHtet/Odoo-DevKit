@@ -1,43 +1,57 @@
 # Swagger UI Module for Odoo
 
-This module integrates Swagger UI into your Odoo project to provide a user-friendly interface for your API documentation.
+This module integrates Swagger UI into your Odoo project and generates an OpenAPI document from the installed Odoo HTTP routes. It is designed to work well with custom API modules such as fs_connector.
+
+## What it does
+
+- Serves a Swagger UI page at `/swagger/ui`
+- Generates an OpenAPI document at `/swagger/openapi.json`
+- Includes all routes whose URL starts with one or more configured API prefixes
+- Works with multiple prefixes, so you can document several API areas at once
 
 ## File Structure
 
 ```
 /web_swagger_ui/
-├───__init__.py
-├───__manifest__.py
-├───controllers/
-│   ├───__init__.py
-│   └───main.py
-├───static/
-│   └───src/
-│       ├───lib/
-│       │   └───swagger-ui/
-│       │       ├───swagger-ui-bundle.js
-│       │       ├───swagger-ui-standalone-preset.js
-│       │       └───swagger-ui.css
-│       └───swagger.json
-└───views/
-    └───swagger_ui_template.xml
+├── __init__.py
+├── __manifest__.py
+├── controllers/
+│   ├── __init__.py
+│   └── main.py
+├── static/
+│   └── src/
+│       ├── lib/
+│       │   └── swagger-ui/
+│       │       ├── swagger-ui-bundle.js
+│       │       ├── swagger-ui-standalone-preset.js
+│       │       └── swagger-ui.css
+└── views/
+    └── swagger_ui_template.xml
 ```
 
-## How to Use It
+## How to use it
 
-1.  **Restart your Odoo server:** This is necessary for Odoo to recognize the new module.
+1. Restart your Odoo server.
+2. Update the apps list and install the module.
+3. Open the Swagger UI page at `/swagger/ui`.
+4. The OpenAPI document is generated dynamically from the installed routes.
 
-2.  **Update the apps list:**
-    *   Go to the **Apps** menu in your Odoo dashboard.
-    *   Click on **Update Apps List**.
-    *   You might need to remove the default "Apps" filter in the search bar to see all modules.
+## Configuring API prefixes
 
-3.  **Install the module:**
-    *   Search for "Swagger UI" and install it.
+By default, the module documents routes under `/fs/api`.
 
-4.  **Access Swagger UI:**
-    *   After installation, a new menu item, "Swagger UI," will appear under the **Settings** menu. Click on **API Documentation** to open the Swagger UI page in a new tab.
+To add more prefixes or change the current ones:
 
-5.  **Customize your API specification:**
-    *   The Swagger UI will display a sample API documentation. To use your own API specification, you need to replace the content of the following file with your own [OpenAPI 3.0](https://swagger.io/specification/) compliant JSON:
-        `web_swagger_ui/static/src/swagger.json`
+1. Go to Settings > Technical > Parameters > System Parameters.
+2. Create or update a system parameter with this key:
+   - `web_swagger_ui.api_prefixes`
+3. Set the value as a comma-separated list, for example:
+   - `/fs/api,/api/jo,/custom/api`
+
+The generator will include every route whose path begins with any configured prefix.
+
+## Notes for other developers
+
+- Keep request-body schemas in the API module that owns the endpoint.
+- If you add a new API controller in your custom addon, it will appear in Swagger automatically as long as its route starts with one of the configured prefixes.
+- If you need better schema details, add explicit request-body metadata in the controller module that defines the endpoint.
